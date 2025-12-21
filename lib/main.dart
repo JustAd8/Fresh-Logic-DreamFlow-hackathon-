@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:fridgeflow/firebase_options.dart';
 import 'package:fridgeflow/theme.dart';
 import 'package:fridgeflow/nav.dart';
 import 'package:fridgeflow/services/user_service.dart';
@@ -19,12 +21,16 @@ void main() async {
 
 Future<void> _initializeServices() async {
   try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+
     await UserService().initialize();
     
     final user = UserService().currentUser;
     if (user != null) {
       await InventoryService().initialize(user.id);
-      await RecipeService().initialize();
+      await RecipeService().initialize(user.id);
       await ShoppingCartService().initialize(user.id);
       
       if (RecipeService().recipes.isEmpty) {

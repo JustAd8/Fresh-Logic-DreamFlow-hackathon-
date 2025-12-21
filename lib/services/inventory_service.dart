@@ -9,7 +9,7 @@ class InventoryService {
   factory InventoryService() => _instance;
   InventoryService._internal();
 
-  static const String _inventoryKey = 'inventory_items';
+  String? _userId;
   List<InventoryItem> _items = [];
   bool _isLoading = false;
 
@@ -17,15 +17,15 @@ class InventoryService {
   bool get isLoading => _isLoading;
 
   Future<void> initialize(String userId) async {
+    _userId = userId;
     _isLoading = true;
     try {
       final prefs = await SharedPreferences.getInstance();
-      final itemsJson = prefs.getString(_inventoryKey);
+      final itemsJson = prefs.getString('inventory_$userId');
       
       if (itemsJson != null) {
         final List<dynamic> decoded = jsonDecode(itemsJson);
-        final allItems = decoded.map((e) => InventoryItem.fromJson(e as Map<String, dynamic>)).toList();
-        _items = allItems.where((item) => item.userId == userId).toList();
+        _items = decoded.map((e) => InventoryItem.fromJson(e as Map<String, dynamic>)).toList();
       } else {
         _items = _generateSampleData(userId);
         await _saveItems();
@@ -98,10 +98,11 @@ class InventoryService {
   }
 
   Future<void> _saveItems() async {
+    if (_userId == null) return;
     try {
       final prefs = await SharedPreferences.getInstance();
       final itemsJson = jsonEncode(_items.map((e) => e.toJson()).toList());
-      await prefs.setString(_inventoryKey, itemsJson);
+      await prefs.setString('inventory_$_userId', itemsJson);
     } catch (e) {
       debugPrint('Failed to save items: $e');
       rethrow;

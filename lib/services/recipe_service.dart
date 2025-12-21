@@ -10,19 +10,22 @@ class RecipeService {
   factory RecipeService() => _instance;
   RecipeService._internal();
 
-  static const String _recipesKey = 'recipes';
+  String? _userId;
   List<Recipe> _recipes = [];
 
   List<Recipe> get recipes => _recipes;
 
-  Future<void> initialize() async {
+  Future<void> initialize(String userId) async {
+    _userId = userId;
     try {
       final prefs = await SharedPreferences.getInstance();
-      final recipesJson = prefs.getString(_recipesKey);
+      final recipesJson = prefs.getString('recipes_$userId');
       
       if (recipesJson != null) {
-        final List<dynamic> decoded = jsonDecode(recipesJson);
-        _recipes = decoded.map((e) => Recipe.fromJson(e as Map<String, dynamic>)).toList();
+        final dynamic decoded = jsonDecode(recipesJson);
+        if (decoded is List) {
+          _recipes = decoded.map((e) => Recipe.fromJson(e as Map<String, dynamic>)).toList();
+        }
       }
     } catch (e) {
       debugPrint('Failed to load recipes: $e');
@@ -169,7 +172,9 @@ class RecipeService {
 
     final missing = updatedIngredients.where((i) => !i.isAvailable).toList();
     final available = updatedIngredients.where((i) => i.isAvailable).length;
-    final matchScore = (available / updatedIngredients.length) * 100;
+    final matchScore = updatedIngredients.isEmpty 
+        ? 0.0 
+        : (available / updatedIngredients.length) * 100;
 
     return Recipe(
       id: id,
@@ -185,10 +190,11 @@ class RecipeService {
   }
 
   Future<void> _saveRecipes() async {
+    if (_userId == null) return;
     try {
       final prefs = await SharedPreferences.getInstance();
       final recipesJson = jsonEncode(_recipes.map((e) => e.toJson()).toList());
-      await prefs.setString(_recipesKey, recipesJson);
+      await prefs.setString('recipes_$_userId', recipesJson);
     } catch (e) {
       debugPrint('Failed to save recipes: $e');
       rethrow;
