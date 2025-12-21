@@ -94,23 +94,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 const SizedBox(height: 32),
                 Center(
                   child: Container(
-                    width: 120,
-                    height: 120,
+                    width: 140,
+                    height: 140,
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
-                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-                          blurRadius: 20,
-                          spreadRadius: 5,
+                          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
+                          blurRadius: 24,
+                          spreadRadius: 4,
                         ),
                       ],
                     ),
-                    child: Icon(
-                      Icons.kitchen_outlined,
-                      size: 64,
-                      color: Theme.of(context).colorScheme.primary,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: Image.asset(
+                        'assets/images/FreshFlow.jpg',
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                 ),
