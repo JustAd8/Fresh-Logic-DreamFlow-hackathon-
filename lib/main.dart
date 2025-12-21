@@ -8,7 +8,7 @@ import 'package:fridgeflow/services/inventory_service.dart';
 import 'package:fridgeflow/services/recipe_service.dart';
 import 'package:fridgeflow/services/shopping_cart_service.dart';
 
-/// Main entry point for FridgeFlow
+/// Main entry point for FridgeFlow - India Edition
 ///
 /// Initializes all services and sets up the app
 void main() async {
