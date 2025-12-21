@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "265849220146",
+    "project_id": "fridge-flow-dreamflow",
+    "storage_bucket": "fridge-flow-dreamflow.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:265849220146:android:c908e27d3031b2fdd7a02b",
+        "android_client_info": {
+          "package_name": "com.mycompany.CounterApp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCHeH3fv2S4DQxaGU0lDFCeoZY5NhG2KVY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
