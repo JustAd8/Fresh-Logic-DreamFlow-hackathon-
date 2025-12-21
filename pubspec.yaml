@@ -28,12 +28,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-  assets:
-    - assets/logo.png
-    - assets/images/
-
-flutter_launcher_icons:
-  android: true
-  ios: true
-  image_path: assets/logo.png
-  remove_alpha_ios: true

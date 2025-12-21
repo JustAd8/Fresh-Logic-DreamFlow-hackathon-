@@ -97,6 +97,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     width: 120,
                     height: 120,
                     decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
                         BoxShadow(
@@ -106,12 +107,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                       ],
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: Image.asset(
-                        'assets/logo.png',
-                        fit: BoxFit.cover,
-                      ),
+                    child: Icon(
+                      Icons.kitchen_outlined,
+                      size: 64,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                 ),
