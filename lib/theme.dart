@@ -155,6 +155,15 @@ class DarkModeColors {
   static const darkInversePrimary = Color(0xFF7C9A7F);
 }
 
+/// Unified theme constants for easy access
+class AppTheme {
+  static const primaryColor = Color(0xFF7C9A7F);
+  static const secondaryColor = Color(0xFF2C3333);
+  static const backgroundColor = Color(0xFFF5F8F6);
+  static const textColor = Color(0xFF1A1C1B);
+  static const errorColor = Color(0xFFE57373);
+}
+
 /// Font size constants
 class FontSizes {
   static const double displayLarge = 57.0;

@@ -8,6 +8,7 @@ import 'package:fridgeflow/screens/recipes_screen.dart';
 import 'package:fridgeflow/screens/shop_screen.dart';
 import 'package:fridgeflow/screens/cooking_mode_screen.dart';
 import 'package:fridgeflow/screens/community_rescue_screen.dart';
+import 'package:fridgeflow/screens/profile_screen.dart';
 import 'package:fridgeflow/screens/main_shell.dart';
 
 class AppRouter {
@@ -93,6 +94,11 @@ class AppRouter {
           ),
         ),
       ),
+      GoRoute(
+        path: AppRoutes.profile,
+        name: 'profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
     ],
   );
 }
@@ -105,4 +111,5 @@ class AppRoutes {
   static const String shop = '/shop';
   static const String cooking = '/cooking';
   static const String community = '/community';
+  static const String profile = '/profile';
 }

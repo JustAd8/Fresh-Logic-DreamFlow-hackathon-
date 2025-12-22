@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fridgeflow/models/user_model.dart';
 
 class UserService {
@@ -53,6 +54,7 @@ class UserService {
     try {
       _currentUser = user.copyWith(updatedAt: DateTime.now());
       await _saveUser();
+      await _syncToFirestore();
     } catch (e) {
       debugPrint('Failed to update user: $e');
       rethrow;
@@ -68,6 +70,26 @@ class UserService {
     } catch (e) {
       debugPrint('Failed to save user: $e');
       rethrow;
+    }
+  }
+
+  Future<void> _syncToFirestore() async {
+    if (_currentUser == null) return;
+    
+    try {
+      final firestore = FirebaseFirestore.instance;
+      final userDoc = firestore.collection('users').doc(_currentUser!.id);
+      
+      await userDoc.set({
+        ..._currentUser!.toJson(),
+        'createdAt': Timestamp.fromDate(_currentUser!.createdAt),
+        'updatedAt': Timestamp.fromDate(_currentUser!.updatedAt),
+      }, SetOptions(merge: true));
+      
+      debugPrint('User synced to Firestore: ${_currentUser!.id}');
+    } catch (e) {
+      debugPrint('Failed to sync user to Firestore: $e');
+      // Don't rethrow - local storage should still work
     }
   }
 
@@ -101,6 +123,7 @@ class UserService {
       );
       
       await _saveUser();
+      await _syncToFirestore();
       debugPrint('Added savings: ₹$amount for $recipeTitle');
     } catch (e) {
       debugPrint('Failed to add savings: $e');

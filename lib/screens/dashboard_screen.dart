@@ -235,6 +235,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () => context.push('/profile'),
+            tooltip: 'Profile & Settings',
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadData,
           ),
@@ -264,7 +269,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     fontWeight: FontWeight.bold,
                                   ),
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 24
+                        ),
                             FreshnessGauge(score: _freshnessScore),
                             const SizedBox(height: 16),
                             Text(

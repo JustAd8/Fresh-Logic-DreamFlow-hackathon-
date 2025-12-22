@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user owns the document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Users collection - private data
+    match /users/{userId} {
+      allow read, update, delete: if isOwner(userId);
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.id;
+    }
+    
+    // Inventory items - private to user
+    match /inventory/{itemId} {
+      allow read, write: if isAuthenticated() && 
+                            request.auth.uid == resource.data.userId;
+      allow create: if isAuthenticated() && 
+                      request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Recipes - private to user
+    match /recipes/{recipeId} {
+      allow read, write: if isAuthenticated() && 
+                            request.auth.uid == resource.data.userId;
+      allow create: if isAuthenticated() && 
+                      request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Shopping cart - private to user
+    match /shopping_cart/{itemId} {
+      allow read, write: if isAuthenticated() && 
+                            request.auth.uid == resource.data.userId;
+      allow create: if isAuthenticated() && 
+                      request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Community listings - public read, owner write
+    match /community_listings/{listingId} {
+      allow read: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && 
+                               request.auth.uid == resource.data.userId;
+      allow create: if isAuthenticated() && 
+                      request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Challenges - private to user
+    match /challenges/{challengeId} {
+      allow read, write: if isAuthenticated() && 
+                            request.auth.uid == resource.data.userId;
+      allow create: if isAuthenticated() && 
+                      request.auth.uid == request.resource.data.userId;
+    }
+    
+    // Default deny all for any other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

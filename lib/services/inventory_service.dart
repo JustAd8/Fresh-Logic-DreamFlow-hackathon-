@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fridgeflow/models/inventory_item_model.dart';
+import 'package:fridgeflow/services/product_image_service.dart';
 
 class InventoryService {
   static final InventoryService _instance = InventoryService._internal();
@@ -55,8 +57,13 @@ class InventoryService {
 
   Future<void> addItem(InventoryItem item) async {
     try {
-      _items.add(item);
+      // Generate product image if not provided
+      final imageUrl = item.imageUrl ?? ProductImageService().getProductEmoji(item.itemName, item.category);
+      final itemWithImage = item.copyWith(imageUrl: imageUrl);
+      
+      _items.add(itemWithImage);
       await _saveItems();
+      await _syncToFirestore(itemWithImage);
     } catch (e) {
       debugPrint('Failed to add item: $e');
       rethrow;
@@ -69,6 +76,7 @@ class InventoryService {
       if (index != -1) {
         _items[index] = item.copyWith(updatedAt: DateTime.now());
         await _saveItems();
+        await _syncToFirestore(_items[index]);
       }
     } catch (e) {
       debugPrint('Failed to update item: $e');
@@ -80,6 +88,7 @@ class InventoryService {
     try {
       _items.removeWhere((item) => item.id == itemId);
       await _saveItems();
+      await _deleteFromFirestore(itemId);
     } catch (e) {
       debugPrint('Failed to delete item: $e');
       rethrow;
@@ -91,6 +100,11 @@ class InventoryService {
       final newItems = _generateRandomItems(userId, 5);
       _items.addAll(newItems);
       await _saveItems();
+      
+      // Sync all new items to Firestore
+      for (final item in newItems) {
+        await _syncToFirestore(item);
+      }
     } catch (e) {
       debugPrint('Failed to simulate IoT sync: $e');
       rethrow;
@@ -245,5 +259,36 @@ class InventoryService {
 
     final score = ((freshCount * 1.0 + expiringSoonCount * 0.5) / userItems.length) * 100;
     return score.clamp(0, 100);
+  }
+
+  Future<void> _syncToFirestore(InventoryItem item) async {
+    try {
+      final firestore = FirebaseFirestore.instance;
+      final itemDoc = firestore.collection('inventory').doc(item.id);
+      
+      await itemDoc.set({
+        ...item.toJson(),
+        'purchaseDate': Timestamp.fromDate(item.purchaseDate),
+        'expiryDate': Timestamp.fromDate(item.expiryDate),
+        'createdAt': Timestamp.fromDate(item.createdAt),
+        'updatedAt': Timestamp.fromDate(item.updatedAt),
+      }, SetOptions(merge: true));
+      
+      debugPrint('Item synced to Firestore: ${item.id}');
+    } catch (e) {
+      debugPrint('Failed to sync item to Firestore: $e');
+      // Don't rethrow - local storage should still work
+    }
+  }
+
+  Future<void> _deleteFromFirestore(String itemId) async {
+    try {
+      final firestore = FirebaseFirestore.instance;
+      await firestore.collection('inventory').doc(itemId).delete();
+      debugPrint('Item deleted from Firestore: $itemId');
+    } catch (e) {
+      debugPrint('Failed to delete item from Firestore: $e');
+      // Don't rethrow - local storage should still work
+    }
   }
 }

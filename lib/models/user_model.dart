@@ -2,6 +2,11 @@ class User {
   final String id;
   final String name;
   final String email;
+  final int? age;
+  final String language;
+  final String region;
+  final String currency;
+  final String? currentLocation;
   final List<String> dietaryPreferences;
   final List<String> allergies;
   final double totalMoneySaved;
@@ -13,6 +18,11 @@ class User {
     required this.id,
     required this.name,
     required this.email,
+    this.age,
+    this.language = 'en',
+    this.region = 'IN',
+    this.currency = 'INR',
+    this.currentLocation,
     required this.dietaryPreferences,
     required this.allergies,
     this.totalMoneySaved = 0.0,
@@ -25,6 +35,11 @@ class User {
     'id': id,
     'name': name,
     'email': email,
+    'age': age,
+    'language': language,
+    'region': region,
+    'currency': currency,
+    'currentLocation': currentLocation,
     'dietaryPreferences': dietaryPreferences,
     'allergies': allergies,
     'totalMoneySaved': totalMoneySaved,
@@ -37,6 +52,11 @@ class User {
     id: json['id'] as String,
     name: json['name'] as String,
     email: json['email'] as String,
+    age: json['age'] as int?,
+    language: json['language'] as String? ?? 'en',
+    region: json['region'] as String? ?? 'IN',
+    currency: json['currency'] as String? ?? 'INR',
+    currentLocation: json['currentLocation'] as String?,
     dietaryPreferences: List<String>.from(json['dietaryPreferences'] as List),
     allergies: List<String>.from(json['allergies'] as List),
     totalMoneySaved: (json['totalMoneySaved'] as num?)?.toDouble() ?? 0.0,
@@ -51,6 +71,11 @@ class User {
     String? id,
     String? name,
     String? email,
+    int? age,
+    String? language,
+    String? region,
+    String? currency,
+    String? currentLocation,
     List<String>? dietaryPreferences,
     List<String>? allergies,
     double? totalMoneySaved,
@@ -61,6 +86,11 @@ class User {
     id: id ?? this.id,
     name: name ?? this.name,
     email: email ?? this.email,
+    age: age ?? this.age,
+    language: language ?? this.language,
+    region: region ?? this.region,
+    currency: currency ?? this.currency,
+    currentLocation: currentLocation ?? this.currentLocation,
     dietaryPreferences: dietaryPreferences ?? this.dietaryPreferences,
     allergies: allergies ?? this.allergies,
     totalMoneySaved: totalMoneySaved ?? this.totalMoneySaved,
