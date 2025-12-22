@@ -3,10 +3,13 @@ import 'package:go_router/go_router.dart';
 import 'package:fridgeflow/services/user_service.dart';
 import 'package:fridgeflow/services/inventory_service.dart';
 import 'package:fridgeflow/services/recipe_service.dart';
+import 'package:fridgeflow/services/challenge_service.dart';
 import 'package:fridgeflow/widgets/freshness_gauge.dart';
 import 'package:fridgeflow/widgets/inventory_item_card.dart';
 import 'package:fridgeflow/models/inventory_item_model.dart';
+import 'package:fridgeflow/models/challenge_model.dart';
 import 'package:fridgeflow/theme.dart';
+import 'package:intl/intl.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -19,11 +22,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final _userService = UserService();
   final _inventoryService = InventoryService();
   final _recipeService = RecipeService();
+  final _challengeService = ChallengeService();
 
   double _freshnessScore = 100.0;
   List<InventoryItem> _expiringSoon = [];
   String _suggestedDinner = '';
+  Challenge? _activeChallenge;
   bool _isLoading = true;
+  bool _isCreatingChallenge = false;
 
   @override
   void initState() {
@@ -40,8 +46,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final user = _userService.currentUser;
       if (user == null) return;
 
+      await _challengeService.initialize(user.id);
+      
       _freshnessScore = _inventoryService.calculateFreshnessScore(user.id);
       _expiringSoon = _inventoryService.getExpiringSoonItems(user.id);
+      _activeChallenge = _challengeService.activeChallenge;
 
       if (_recipeService.recipes.isNotEmpty) {
         _suggestedDinner = _recipeService.recipes.first.title;
@@ -53,6 +62,146 @@ class _DashboardScreenState extends State<DashboardScreen> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  Future<void> _createChallenge() async {
+    final user = _userService.currentUser;
+    if (user == null) return;
+
+    setState(() => _isCreatingChallenge = true);
+
+    try {
+      final challenge = await _challengeService.createChallenge(user.id);
+      setState(() {
+        _activeChallenge = challenge;
+        _isCreatingChallenge = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Iron Chef Challenge created! You have ${challenge.formattedTimeRemaining} to complete it.'),
+            action: SnackBarAction(
+              label: 'View',
+              onPressed: () => _showChallengeDialog(challenge),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Failed to create challenge: $e');
+      setState(() => _isCreatingChallenge = false);
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to create challenge: $e')),
+        );
+      }
+    }
+  }
+
+  void _showChallengeDialog(Challenge challenge) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.errorContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                Icons.emoji_events,
+                color: Theme.of(context).colorScheme.onErrorContainer,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Text('Iron Chef Challenge', style: TextStyle(fontSize: 18)),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Use these at-risk ingredients:',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            ...challenge.targetIngredients.map((item) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
+                  Text(item.imageUrl ?? '🍽️', style: const TextStyle(fontSize: 24)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.itemName,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          'Expires in ${item.daysRemaining} days',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            )),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.errorContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.timer,
+                    color: Theme.of(context).colorScheme.onErrorContainer,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Time Remaining: ${challenge.formattedTimeRemaining}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onErrorContainer,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.go('/recipes');
+            },
+            child: const Text('View Recipes'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -133,6 +282,213 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
+                    Card(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      child: Padding(
+                        padding: AppSpacing.paddingLg,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.trending_down,
+                                  color: Theme.of(context).colorScheme.primary,
+                                  size: 28,
+                                ),
+                                const SizedBox(width: 12),
+                                Text(
+                                  'Inflation Fighter',
+                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Total Money Saved',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              '₹${NumberFormat('#,##0').format(user?.totalMoneySaved ?? 0)}',
+                              style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'This Month',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.onPrimaryContainer,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: _userService.getRecentMonthlySavings(months: 6).map((entry) {
+                                final maxSavings = _userService.getRecentMonthlySavings(months: 6)
+                                    .fold<double>(0.0, (max, e) => e.value > max ? e.value : max);
+                                final heightRatio = maxSavings > 0 ? (entry.value / maxSavings) : 0.0;
+                                
+                                return Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                                    child: Column(
+                                      children: [
+                                        Container(
+                                          height: 60 * heightRatio.clamp(0.1, 1.0),
+                                          decoration: BoxDecoration(
+                                            color: Theme.of(context).colorScheme.primary,
+                                            borderRadius: BorderRadius.circular(4),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          entry.key.split('-')[1],
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    if (_activeChallenge != null) ...[
+                      Card(
+                        color: Theme.of(context).colorScheme.errorContainer,
+                        child: InkWell(
+                          onTap: () => _showChallengeDialog(_activeChallenge!),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: AppSpacing.paddingLg,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.emoji_events,
+                                      color: Theme.of(context).colorScheme.onErrorContainer,
+                                      size: 28,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'Active Iron Chef Challenge',
+                                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: Theme.of(context).colorScheme.onErrorContainer,
+                                        ),
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.chevron_right,
+                                      color: Theme.of(context).colorScheme.onErrorContainer,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.timer,
+                                      size: 16,
+                                      color: Theme.of(context).colorScheme.onErrorContainer,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      _activeChallenge!.formattedTimeRemaining,
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context).colorScheme.onErrorContainer,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Text(
+                                        '${_activeChallenge!.targetIngredients.length} ingredients',
+                                        style: TextStyle(
+                                          color: Theme.of(context).colorScheme.onErrorContainer,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ] else ...[
+                      Card(
+                        child: InkWell(
+                          onTap: _isCreatingChallenge ? null : _createChallenge,
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: AppSpacing.paddingLg,
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context).colorScheme.errorContainer,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    Icons.emoji_events,
+                                    color: Theme.of(context).colorScheme.onErrorContainer,
+                                    size: 28,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Try Iron Chef Challenge',
+                                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Turn waste reduction into a game!',
+                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                if (_isCreatingChallenge)
+                                  const CircularProgressIndicator()
+                                else
+                                  Icon(
+                                    Icons.arrow_forward,
+                                    color: Theme.of(context).colorScheme.primary,
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
                     Row(
                       children: [
                         Expanded(

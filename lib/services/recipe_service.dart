@@ -176,6 +176,9 @@ class RecipeService {
         ? 0.0 
         : (available / updatedIngredients.length) * 100;
 
+    final estimatedHomeCost = _calculateHomeCost(ingredients);
+    final estimatedRestaurantPrice = _calculateRestaurantPrice(title, estimatedHomeCost);
+
     return Recipe(
       id: id,
       title: title,
@@ -185,8 +188,42 @@ class RecipeService {
       cookingTime: cookingTime,
       heroImage: heroImage,
       matchScore: matchScore,
+      estimatedHomeCost: estimatedHomeCost,
+      estimatedRestaurantPrice: estimatedRestaurantPrice,
       createdAt: createdAt,
     );
+  }
+
+  double _calculateHomeCost(List<RecipeIngredient> ingredients) {
+    double total = 0.0;
+    for (var ingredient in ingredients) {
+      if (ingredient.name.toLowerCase().contains('chicken') || 
+          ingredient.name.toLowerCase().contains('mutton')) {
+        total += 250.0;
+      } else if (ingredient.name.toLowerCase().contains('fish') || 
+                 ingredient.name.toLowerCase().contains('seafood')) {
+        total += 200.0;
+      } else if (ingredient.name.toLowerCase().contains('rice') || 
+                 ingredient.name.toLowerCase().contains('pasta')) {
+        total += 50.0;
+      } else if (ingredient.name.toLowerCase().contains('cheese') || 
+                 ingredient.name.toLowerCase().contains('cream')) {
+        total += 80.0;
+      } else {
+        total += 30.0;
+      }
+    }
+    return total;
+  }
+
+  double _calculateRestaurantPrice(String title, double homeCost) {
+    double multiplier = 3.5;
+    if (title.toLowerCase().contains('curry') || title.toLowerCase().contains('mutton')) {
+      multiplier = 4.0;
+    } else if (title.toLowerCase().contains('pasta') || title.toLowerCase().contains('bowl')) {
+      multiplier = 3.0;
+    }
+    return homeCost * multiplier;
   }
 
   Future<void> _saveRecipes() async {

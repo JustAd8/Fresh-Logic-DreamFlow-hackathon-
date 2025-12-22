@@ -41,6 +41,8 @@ class Recipe {
   final int cookingTime;
   final String heroImage;
   final double matchScore;
+  final double estimatedHomeCost;
+  final double estimatedRestaurantPrice;
   final DateTime createdAt;
 
   Recipe({
@@ -52,8 +54,12 @@ class Recipe {
     required this.cookingTime,
     required this.heroImage,
     required this.matchScore,
+    this.estimatedHomeCost = 0.0,
+    this.estimatedRestaurantPrice = 0.0,
     required this.createdAt,
   });
+
+  double get savingsAmount => estimatedRestaurantPrice - estimatedHomeCost;
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -64,6 +70,8 @@ class Recipe {
     'cookingTime': cookingTime,
     'heroImage': heroImage,
     'matchScore': matchScore,
+    'estimatedHomeCost': estimatedHomeCost,
+    'estimatedRestaurantPrice': estimatedRestaurantPrice,
     'createdAt': createdAt.toIso8601String(),
   };
 
@@ -80,6 +88,8 @@ class Recipe {
     cookingTime: json['cookingTime'] as int,
     heroImage: json['heroImage'] as String,
     matchScore: (json['matchScore'] as num).toDouble(),
+    estimatedHomeCost: (json['estimatedHomeCost'] as num?)?.toDouble() ?? 0.0,
+    estimatedRestaurantPrice: (json['estimatedRestaurantPrice'] as num?)?.toDouble() ?? 0.0,
     createdAt: DateTime.parse(json['createdAt'] as String),
   );
 
@@ -92,6 +102,8 @@ class Recipe {
     int? cookingTime,
     String? heroImage,
     double? matchScore,
+    double? estimatedHomeCost,
+    double? estimatedRestaurantPrice,
     DateTime? createdAt,
   }) => Recipe(
     id: id ?? this.id,
@@ -102,6 +114,8 @@ class Recipe {
     cookingTime: cookingTime ?? this.cookingTime,
     heroImage: heroImage ?? this.heroImage,
     matchScore: matchScore ?? this.matchScore,
+    estimatedHomeCost: estimatedHomeCost ?? this.estimatedHomeCost,
+    estimatedRestaurantPrice: estimatedRestaurantPrice ?? this.estimatedRestaurantPrice,
     createdAt: createdAt ?? this.createdAt,
   );
 }

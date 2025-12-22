@@ -83,4 +83,50 @@ class UserService {
   }
 
   bool get hasUser => _currentUser != null;
+
+  Future<void> addSavings(double amount, String recipeTitle) async {
+    if (_currentUser == null) return;
+    
+    try {
+      final now = DateTime.now();
+      final monthKey = '${now.year}-${now.month.toString().padLeft(2, '0')}';
+      
+      final updatedMonthlySavings = Map<String, double>.from(_currentUser!.monthlySavings);
+      updatedMonthlySavings[monthKey] = (updatedMonthlySavings[monthKey] ?? 0.0) + amount;
+      
+      _currentUser = _currentUser!.copyWith(
+        totalMoneySaved: _currentUser!.totalMoneySaved + amount,
+        monthlySavings: updatedMonthlySavings,
+        updatedAt: DateTime.now(),
+      );
+      
+      await _saveUser();
+      debugPrint('Added savings: ₹$amount for $recipeTitle');
+    } catch (e) {
+      debugPrint('Failed to add savings: $e');
+      rethrow;
+    }
+  }
+
+  double getMonthlySavings(DateTime month) {
+    if (_currentUser == null) return 0.0;
+    final monthKey = '${month.year}-${month.month.toString().padLeft(2, '0')}';
+    return _currentUser!.monthlySavings[monthKey] ?? 0.0;
+  }
+
+  List<MapEntry<String, double>> getRecentMonthlySavings({int months = 6}) {
+    if (_currentUser == null) return [];
+    
+    final now = DateTime.now();
+    final recentMonths = <MapEntry<String, double>>[];
+    
+    for (int i = months - 1; i >= 0; i--) {
+      final month = DateTime(now.year, now.month - i, 1);
+      final monthKey = '${month.year}-${month.month.toString().padLeft(2, '0')}';
+      final savings = _currentUser!.monthlySavings[monthKey] ?? 0.0;
+      recentMonths.add(MapEntry(monthKey, savings));
+    }
+    
+    return recentMonths;
+  }
 }

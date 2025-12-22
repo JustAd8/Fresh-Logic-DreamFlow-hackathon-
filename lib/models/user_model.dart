@@ -4,6 +4,8 @@ class User {
   final String email;
   final List<String> dietaryPreferences;
   final List<String> allergies;
+  final double totalMoneySaved;
+  final Map<String, double> monthlySavings;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -13,9 +15,11 @@ class User {
     required this.email,
     required this.dietaryPreferences,
     required this.allergies,
+    this.totalMoneySaved = 0.0,
+    Map<String, double>? monthlySavings,
     required this.createdAt,
     required this.updatedAt,
-  });
+  }) : monthlySavings = monthlySavings ?? {};
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -23,6 +27,8 @@ class User {
     'email': email,
     'dietaryPreferences': dietaryPreferences,
     'allergies': allergies,
+    'totalMoneySaved': totalMoneySaved,
+    'monthlySavings': monthlySavings,
     'createdAt': createdAt.toIso8601String(),
     'updatedAt': updatedAt.toIso8601String(),
   };
@@ -33,6 +39,10 @@ class User {
     email: json['email'] as String,
     dietaryPreferences: List<String>.from(json['dietaryPreferences'] as List),
     allergies: List<String>.from(json['allergies'] as List),
+    totalMoneySaved: (json['totalMoneySaved'] as num?)?.toDouble() ?? 0.0,
+    monthlySavings: (json['monthlySavings'] as Map<String, dynamic>?)?.map(
+      (key, value) => MapEntry(key, (value as num).toDouble()),
+    ) ?? {},
     createdAt: DateTime.parse(json['createdAt'] as String),
     updatedAt: DateTime.parse(json['updatedAt'] as String),
   );
@@ -43,6 +53,8 @@ class User {
     String? email,
     List<String>? dietaryPreferences,
     List<String>? allergies,
+    double? totalMoneySaved,
+    Map<String, double>? monthlySavings,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => User(
@@ -51,6 +63,8 @@ class User {
     email: email ?? this.email,
     dietaryPreferences: dietaryPreferences ?? this.dietaryPreferences,
     allergies: allergies ?? this.allergies,
+    totalMoneySaved: totalMoneySaved ?? this.totalMoneySaved,
+    monthlySavings: monthlySavings ?? this.monthlySavings,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
