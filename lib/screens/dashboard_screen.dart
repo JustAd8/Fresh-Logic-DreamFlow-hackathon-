@@ -4,6 +4,7 @@ import 'package:fridgeflow/services/user_service.dart';
 import 'package:fridgeflow/services/inventory_service.dart';
 import 'package:fridgeflow/services/recipe_service.dart';
 import 'package:fridgeflow/services/challenge_service.dart';
+import 'package:fridgeflow/services/nutrition_analyzer_service.dart';
 import 'package:fridgeflow/widgets/freshness_gauge.dart';
 import 'package:fridgeflow/widgets/inventory_item_card.dart';
 import 'package:fridgeflow/models/inventory_item_model.dart';
@@ -23,11 +24,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final _inventoryService = InventoryService();
   final _recipeService = RecipeService();
   final _challengeService = ChallengeService();
+  final _nutritionAnalyzer = NutritionAnalyzerService();
 
   double _freshnessScore = 100.0;
   List<InventoryItem> _expiringSoon = [];
   String _suggestedDinner = '';
   Challenge? _activeChallenge;
+  NutritionProfile? _nutritionProfile;
   bool _isLoading = true;
   bool _isCreatingChallenge = false;
 
@@ -51,6 +54,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _freshnessScore = _inventoryService.calculateFreshnessScore(user.id);
       _expiringSoon = _inventoryService.getExpiringSoonItems(user.id);
       _activeChallenge = _challengeService.activeChallenge;
+      
+      final items = _inventoryService.getItemsByUserId(user.id);
+      _nutritionProfile = _nutritionAnalyzer.analyzePantry(items);
 
       if (_recipeService.recipes.isNotEmpty) {
         _suggestedDinner = _recipeService.recipes.first.title;
@@ -489,6 +495,120 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(height: 24),
                     ],
+                    if (_nutritionProfile != null) ...[
+                      Card(
+                        color: Theme.of(context).colorScheme.tertiaryContainer,
+                        child: Padding(
+                          padding: AppSpacing.paddingLg,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    _nutritionAnalyzer.getBalanceEmoji(_nutritionProfile!),
+                                    style: const TextStyle(fontSize: 28),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      'Nutritional Stack Analysis',
+                                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context).colorScheme.onTertiaryContainer,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Your Pantry Breakdown',
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.onTertiaryContainer,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              ..._nutritionProfile!.toPercentages().entries.map((entry) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Text(entry.key.icon, style: const TextStyle(fontSize: 16)),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              entry.key.displayName,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w500,
+                                                color: Theme.of(context).colorScheme.onTertiaryContainer,
+                                              ),
+                                            ),
+                                          ),
+                                          Text(
+                                            '${entry.value.toStringAsFixed(0)}%',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: Theme.of(context).colorScheme.onTertiaryContainer,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 4),
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(4),
+                                        child: LinearProgressIndicator(
+                                          value: entry.value / 100,
+                                          minHeight: 6,
+                                          backgroundColor: Theme.of(context).colorScheme.onTertiaryContainer.withValues(alpha: 0.2),
+                                          valueColor: AlwaysStoppedAnimation<Color>(
+                                            Theme.of(context).colorScheme.tertiary,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }),
+                              const SizedBox(height: 16),
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(
+                                      Icons.lightbulb_outline,
+                                      size: 20,
+                                      color: Theme.of(context).colorScheme.onTertiaryContainer,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        _nutritionAnalyzer.getRecommendation(_nutritionProfile!),
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Theme.of(context).colorScheme.onTertiaryContainer,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                    ],
                     Row(
                       children: [
                         Expanded(
@@ -513,6 +633,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           ),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 12),
+                    Card(
+                      color: Theme.of(context).colorScheme.primaryContainer,
+                      child: InkWell(
+                        onTap: () => context.go('/community'),
+                        borderRadius: BorderRadius.circular(12),
+                        child: Padding(
+                          padding: AppSpacing.paddingMd,
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.volunteer_activism,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Community Rescue',
+                                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Share or find free food near you',
+                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Icon(
+                                Icons.arrow_forward,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 24),
                     if (_expiringSoon.isNotEmpty) ...[

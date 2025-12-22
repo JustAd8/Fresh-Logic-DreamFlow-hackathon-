@@ -3,6 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:fridgeflow/services/user_service.dart';
 import 'package:fridgeflow/services/inventory_service.dart';
 import 'package:fridgeflow/services/food_scan_service.dart';
+import 'package:fridgeflow/services/compost_classifier_service.dart';
 import 'package:fridgeflow/widgets/inventory_item_card.dart';
 import 'package:fridgeflow/models/inventory_item_model.dart';
 import 'package:fridgeflow/theme.dart';
@@ -18,6 +19,7 @@ class _PantryScreenState extends State<PantryScreen> {
   final _userService = UserService();
   final _inventoryService = InventoryService();
   final _foodScanService = FoodScanService();
+  final _compostClassifier = CompostClassifierService();
   final _imagePicker = ImagePicker();
 
   List<InventoryItem> _items = [];
@@ -151,6 +153,106 @@ class _PantryScreenState extends State<PantryScreen> {
         );
       }
     }
+  }
+
+  Future<void> _checkCompostOrCook() async {
+    try {
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.camera,
+        imageQuality: 80,
+      );
+
+      if (image == null) return;
+
+      setState(() => _isScanning = true);
+
+      final result = await _compostClassifier.analyzeProduceSafety(image.path);
+
+      if (mounted) {
+        setState(() => _isScanning = false);
+      }
+
+      if (!result['success']) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result['error'] ?? 'Failed to analyze produce')),
+          );
+        }
+        return;
+      }
+
+      if (mounted) {
+        _showCompostOrCookResult(result);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isScanning = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error analyzing: $e')),
+        );
+      }
+    }
+  }
+
+  void _showCompostOrCookResult(Map<String, dynamic> result) {
+    final safety = result['safety'] as ProduceSafety;
+    final produceName = result['produceName'] as String;
+    final recommendation = result['recommendation'] as String;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: safety == ProduceSafety.safeToEat
+                    ? Theme.of(context).colorScheme.primaryContainer
+                    : safety == ProduceSafety.risky
+                        ? Colors.orange.withValues(alpha: 0.2)
+                        : Theme.of(context).colorScheme.errorContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                safety.icon,
+                style: const TextStyle(fontSize: 24),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                safety.displayName,
+                style: const TextStyle(fontSize: 18),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              produceName,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              recommendation,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showAddItemDialog({
@@ -368,14 +470,49 @@ class _PantryScreenState extends State<PantryScreen> {
               ),
             )
           else ...[
-            IconButton(
-              icon: const Icon(Icons.camera_alt),
-              onPressed: _scanFoodItem,
-              tooltip: 'Scan Food',
-            ),
-            IconButton(
-              icon: const Icon(Icons.add),
-              onPressed: () => _showAddItemDialog(),
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (value) {
+                if (value == 'scan') {
+                  _scanFoodItem();
+                } else if (value == 'compost') {
+                  _checkCompostOrCook();
+                } else if (value == 'add') {
+                  _showAddItemDialog();
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'scan',
+                  child: Row(
+                    children: [
+                      Icon(Icons.camera_alt),
+                      SizedBox(width: 12),
+                      Text('Scan to Add'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'compost',
+                  child: Row(
+                    children: [
+                      Icon(Icons.eco),
+                      SizedBox(width: 12),
+                      Text('Compost or Cook?'),
+                    ],
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: 'add',
+                  child: Row(
+                    children: [
+                      Icon(Icons.add),
+                      SizedBox(width: 12),
+                      Text('Add Manually'),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ],
         ],

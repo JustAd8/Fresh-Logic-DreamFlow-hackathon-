@@ -7,6 +7,7 @@ import 'package:fridgeflow/screens/pantry_screen.dart';
 import 'package:fridgeflow/screens/recipes_screen.dart';
 import 'package:fridgeflow/screens/shop_screen.dart';
 import 'package:fridgeflow/screens/cooking_mode_screen.dart';
+import 'package:fridgeflow/screens/community_rescue_screen.dart';
 import 'package:fridgeflow/screens/main_shell.dart';
 
 class AppRouter {
@@ -82,6 +83,16 @@ class AppRouter {
           return CookingModeScreen(recipeId: recipeId);
         },
       ),
+      GoRoute(
+        path: AppRoutes.community,
+        name: 'community',
+        pageBuilder: (context, state) => const NoTransitionPage(
+          child: MainShell(
+            currentIndex: 0,
+            child: CommunityRescueScreen(),
+          ),
+        ),
+      ),
     ],
   );
 }
@@ -93,4 +104,5 @@ class AppRoutes {
   static const String recipes = '/recipes';
   static const String shop = '/shop';
   static const String cooking = '/cooking';
+  static const String community = '/community';
 }

@@ -101,6 +101,8 @@ class LightModeColors {
   // Tertiary: Warm Earth Tone
   static const lightTertiary = Color(0xFFA38B6E);
   static const lightOnTertiary = Color(0xFFFFFFFF);
+  static const lightTertiaryContainer = Color(0xFFEDE5DC);
+  static const lightOnTertiaryContainer = Color(0xFF3F3427);
 
   // Surface and background: Clean whites with subtle green tint
   static const lightSurface = Color(0xFFFBFDFC);
@@ -138,6 +140,8 @@ class DarkModeColors {
   // Tertiary
   static const darkTertiary = Color(0xFFD4C4B0);
   static const darkOnTertiary = Color(0xFF3F3427);
+  static const darkTertiaryContainer = Color(0xFF5F5343);
+  static const darkOnTertiaryContainer = Color(0xFFEDE5DC);
 
   // Surface and background: Deep green-tinted dark
   static const darkSurface = Color(0xFF181C1A);
@@ -186,6 +190,8 @@ ThemeData get lightTheme => ThemeData(
     onSecondary: LightModeColors.lightOnSecondary,
     tertiary: LightModeColors.lightTertiary,
     onTertiary: LightModeColors.lightOnTertiary,
+    tertiaryContainer: LightModeColors.lightTertiaryContainer,
+    onTertiaryContainer: LightModeColors.lightOnTertiaryContainer,
     error: LightModeColors.lightError,
     onError: LightModeColors.lightOnError,
     errorContainer: LightModeColors.lightErrorContainer,
@@ -264,6 +270,8 @@ ThemeData get darkTheme => ThemeData(
     onSecondary: DarkModeColors.darkOnSecondary,
     tertiary: DarkModeColors.darkTertiary,
     onTertiary: DarkModeColors.darkOnTertiary,
+    tertiaryContainer: DarkModeColors.darkTertiaryContainer,
+    onTertiaryContainer: DarkModeColors.darkOnTertiaryContainer,
     error: DarkModeColors.darkError,
     onError: DarkModeColors.darkOnError,
     errorContainer: DarkModeColors.darkErrorContainer,
