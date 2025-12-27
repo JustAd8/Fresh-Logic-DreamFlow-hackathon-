@@ -5,91 +5,48 @@ class ProductImageService {
   factory ProductImageService() => _instance;
   ProductImageService._internal();
 
-  /// Generate appropriate image URL based on product name and category
+  /// Generate appropriate stock image URL based on product name and category
   String getImageForProduct(String itemName, FoodCategory category) {
     final normalizedName = itemName.toLowerCase().trim();
     
-    // Category-based mapping
+    // Category-based mapping to stock images
     final Map<FoodCategory, Map<String, String>> categoryImageMap = {
       FoodCategory.produce: {
-        'tomato': '🍅',
-        'potato': '🥔',
-        'carrot': '🥕',
-        'onion': '🧅',
-        'broccoli': '🥦',
-        'lettuce': '🥬',
-        'spinach': '🥬',
-        'pepper': '🫑',
-        'cucumber': '🥒',
-        'eggplant': '🍆',
-        'corn': '🌽',
-        'garlic': '🧄',
-        'banana': '🍌',
-        'apple': '🍎',
-        'orange': '🍊',
-        'lemon': '🍋',
-        'mango': '🥭',
-        'grapes': '🍇',
-        'watermelon': '🍉',
-        'default': '🥗'
+        'tomato': 'assets/images/Tomatoes_Fresh_Vegetable_null_1766820598640.jpg',
+        'onion': 'assets/images/Onions_Fresh_Vegetable_null_1766820599636.jpg',
+        'carrot': 'assets/images/Carrots_Fresh_Vegetable_null_1766820600559.jpg',
+        'potato': 'assets/images/Potatoes_Fresh_Vegetable_null_1766820605194.jpg',
+        'spinach': 'assets/images/Spinach_Fresh_Vegetable_null_1766820604286.jpg',
+        'default': 'assets/images/Tomatoes_Fresh_Vegetable_null_1766820598640.jpg'
       },
       FoodCategory.dairy: {
-        'milk': '🥛',
-        'cheese': '🧀',
-        'butter': '🧈',
-        'yogurt': '🥛',
-        'cream': '🥛',
-        'paneer': '🧀',
-        'default': '🥛'
+        'milk': 'assets/images/Milk_Dairy_Product_null_1766820601576.jpg',
+        'paneer': 'assets/images/Paneer_Indian_Cheese_null_1766820602470.jpg',
+        'cheese': 'assets/images/Paneer_Indian_Cheese_null_1766820602470.jpg',
+        'yogurt': 'assets/images/Milk_Dairy_Product_null_1766820601576.jpg',
+        'default': 'assets/images/Milk_Dairy_Product_null_1766820601576.jpg'
       },
       FoodCategory.poultry: {
-        'chicken': '🍗',
-        'turkey': '🍗',
-        'egg': '🥚',
-        'default': '🍗'
+        'chicken': 'assets/images/Chicken_Fresh_Meat_null_1766820603461.jpg',
+        'default': 'assets/images/Chicken_Fresh_Meat_null_1766820603461.jpg'
       },
       FoodCategory.mutton: {
-        'mutton': '🍖',
-        'lamb': '🍖',
-        'goat': '🍖',
-        'default': '🍖'
+        'default': 'assets/images/Chicken_Fresh_Meat_null_1766820603461.jpg'
       },
       FoodCategory.seafood: {
-        'fish': '🐟',
-        'shrimp': '🦐',
-        'prawn': '🦐',
-        'crab': '🦀',
-        'lobster': '🦞',
-        'default': '🐟'
+        'default': 'assets/images/Chicken_Fresh_Meat_null_1766820603461.jpg'
       },
       FoodCategory.grains: {
-        'rice': '🍚',
-        'bread': '🍞',
-        'pasta': '🍝',
-        'wheat': '🌾',
-        'oats': '🌾',
-        'default': '🌾'
+        'default': 'assets/images/Khichdi_Rice_Lentil_null_1766820597767.jpg'
       },
       FoodCategory.beverages: {
-        'juice': '🧃',
-        'coffee': '☕',
-        'tea': '🍵',
-        'water': '💧',
-        'soda': '🥤',
-        'default': '🧃'
+        'default': 'assets/images/Milk_Dairy_Product_null_1766820601576.jpg'
       },
       FoodCategory.condiments: {
-        'sauce': '🥫',
-        'ketchup': '🥫',
-        'mustard': '🥫',
-        'mayo': '🥫',
-        'oil': '🫒',
-        'default': '🥫'
+        'default': 'assets/images/Tomatoes_Fresh_Vegetable_null_1766820598640.jpg'
       },
       FoodCategory.frozen: {
-        'ice cream': '🍦',
-        'frozen': '❄️',
-        'default': '❄️'
+        'default': 'assets/images/Chicken_Fresh_Meat_null_1766820603461.jpg'
       },
     };
 
@@ -101,10 +58,10 @@ class ProductImageService {
           return entry.value;
         }
       }
-      return categoryMap['default'] ?? '🍽️';
+      return categoryMap['default'] ?? 'assets/images/Tomatoes_Fresh_Vegetable_null_1766820598640.jpg';
     }
 
-    return '🍽️';
+    return 'assets/images/Tomatoes_Fresh_Vegetable_null_1766820598640.jpg';
   }
 
   /// Get product image emoji or return default

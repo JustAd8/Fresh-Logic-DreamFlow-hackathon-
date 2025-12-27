@@ -37,22 +37,44 @@ class RecipeCard extends StatelessWidget {
             Container(
               height: 140,
               width: double.infinity,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Theme.of(context).colorScheme.primaryContainer,
-                    Theme.of(context).colorScheme.secondaryContainer,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  recipe.heroImage,
-                  style: const TextStyle(fontSize: 64),
-                ),
-              ),
+              child: recipe.heroImage.startsWith('assets/')
+                  ? Image.asset(
+                      recipe.heroImage,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Theme.of(context).colorScheme.primaryContainer,
+                              Theme.of(context).colorScheme.secondaryContainer,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.restaurant, size: 64),
+                        ),
+                      ),
+                    )
+                  : Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Theme.of(context).colorScheme.primaryContainer,
+                            Theme.of(context).colorScheme.secondaryContainer,
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          recipe.heroImage,
+                          style: const TextStyle(fontSize: 64),
+                        ),
+                      ),
+                    ),
             ),
             Padding(
               padding: const EdgeInsets.all(16),

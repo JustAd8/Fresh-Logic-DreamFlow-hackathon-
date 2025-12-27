@@ -120,15 +120,29 @@ class InventoryItemCard extends StatelessWidget {
                         width: 50,
                         height: 50,
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Center(
-                          child: Text(
-                            item.imageUrl ?? '📦',
-                            style: const TextStyle(fontSize: 28),
-                          ),
-                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: item.imageUrl != null && item.imageUrl!.startsWith('assets/')
+                            ? Image.asset(
+                                item.imageUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) => Container(
+                                  color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                                  child: const Center(
+                                    child: Icon(Icons.image_not_supported, size: 24),
+                                  ),
+                                ),
+                              )
+                            : Container(
+                                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                                child: Center(
+                                  child: Text(
+                                    item.imageUrl ?? '📦',
+                                    style: const TextStyle(fontSize: 28),
+                                  ),
+                                ),
+                              ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
