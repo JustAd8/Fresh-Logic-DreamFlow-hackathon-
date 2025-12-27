@@ -279,7 +279,6 @@ class InventoryService {
     final userItems = getItemsByUserId(userId);
     if (userItems.isEmpty) return 100.0;
 
-    final expiredCount = userItems.where((item) => item.isExpired).length;
     final expiringSoonCount = userItems.where((item) => item.isExpiringSoon).length;
     final freshCount = userItems.where((item) => item.daysRemaining >= 3).length;
 

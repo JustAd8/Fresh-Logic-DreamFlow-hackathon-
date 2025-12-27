@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:fridgeflow/services/user_service.dart';
-import 'package:fridgeflow/utils/responsive_layout.dart';
 import 'package:fridgeflow/services/shopping_cart_service.dart';
 import 'package:fridgeflow/services/price_comparison_service.dart';
 import 'package:fridgeflow/models/shopping_cart_model.dart';
@@ -117,7 +116,6 @@ class _ShopScreenState extends State<ShopScreen> {
     }
 
     try {
-      final productNames = _cart!.items.map((item) => item.name).join(', ');
       final uri = Uri.parse(platform.baseUrl);
       
       if (await canLaunchUrl(uri)) {

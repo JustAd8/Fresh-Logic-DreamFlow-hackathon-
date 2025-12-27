@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fridgeflow/services/user_service.dart';
-import 'package:fridgeflow/theme.dart';
 import 'package:fridgeflow/utils/responsive_layout.dart';
 
 class OnboardingScreen extends StatefulWidget {

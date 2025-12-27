@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:fridgeflow/models/user_model.dart';
 import 'package:fridgeflow/services/user_service.dart';
 import 'package:fridgeflow/theme.dart';
 import 'package:fridgeflow/utils/responsive_layout.dart';
