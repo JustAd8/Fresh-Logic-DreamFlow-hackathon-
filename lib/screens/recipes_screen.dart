@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fridgeflow/services/user_service.dart';
+import 'package:fridgeflow/utils/responsive_layout.dart';
 import 'package:fridgeflow/services/inventory_service.dart';
 import 'package:fridgeflow/services/recipe_service.dart';
 import 'package:fridgeflow/services/shopping_cart_service.dart';
@@ -361,39 +362,63 @@ class _RecipesScreenState extends State<RecipesScreen> {
                 )
               : RefreshIndicator(
                   onRefresh: _loadRecipes,
-                  child: ListView.builder(
-                    padding: AppSpacing.paddingMd,
-                    itemCount: _recipes.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == 0) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: ElevatedButton.icon(
-                            onPressed: _isGenerating ? null : _generateRecipes,
-                            icon: _isGenerating
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: Colors.white,
-                                    ),
-                                  )
-                                : const Icon(Icons.refresh),
-                            label: Text(_isGenerating ? 'Generating...' : 'Regenerate Recipes'),
-                          ),
+                  child: ResponsiveLayout.centerConstrainedContent(
+                    context,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final columns = ResponsiveLayout.getGridColumns(context, mobile: 1, tablet: 2, desktop: 3);
+                        return CustomScrollView(
+                          slivers: [
+                            SliverPadding(
+                              padding: ResponsiveLayout.getHorizontalPadding(context).copyWith(
+                                top: ResponsiveLayout.getSpacing(context, mobile: 16),
+                                bottom: ResponsiveLayout.getSpacing(context, mobile: 16),
+                              ),
+                              sliver: SliverToBoxAdapter(
+                                child: ElevatedButton.icon(
+                                  onPressed: _isGenerating ? null : _generateRecipes,
+                                  icon: _isGenerating
+                                      ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : const Icon(Icons.refresh),
+                                  label: Text(_isGenerating ? 'Generating...' : 'Regenerate Recipes'),
+                                ),
+                              ),
+                            ),
+                            SliverPadding(
+                              padding: ResponsiveLayout.getHorizontalPadding(context).copyWith(
+                                top: ResponsiveLayout.getSpacing(context, mobile: 16),
+                                bottom: ResponsiveLayout.getSpacing(context, mobile: 80),
+                              ),
+                              sliver: SliverGrid(
+                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: columns,
+                                  mainAxisSpacing: ResponsiveLayout.getSpacing(context, mobile: 16),
+                                  crossAxisSpacing: ResponsiveLayout.getSpacing(context, mobile: 16),
+                                  childAspectRatio: ResponsiveLayout.getGridAspectRatio(context),
+                                ),
+                                delegate: SliverChildBuilderDelegate(
+                                  (context, index) {
+                                    final recipe = _recipes[index];
+                                    return RecipeCard(
+                                      recipe: recipe,
+                                      onTap: () => _showRecipeDetails(recipe),
+                                    );
+                                  },
+                                  childCount: _recipes.length,
+                                ),
+                              ),
+                            ),
+                          ],
                         );
-                      }
-
-                      final recipe = _recipes[index - 1];
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 16),
-                        child: RecipeCard(
-                          recipe: recipe,
-                          onTap: () => _showRecipeDetails(recipe),
-                        ),
-                      );
-                    },
+                      },
+                    ),
                   ),
                 ),
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:fridgeflow/utils/responsive_layout.dart';
 import 'package:fridgeflow/services/recipe_service.dart';
 import 'package:fridgeflow/services/user_service.dart';
 import 'package:fridgeflow/models/recipe_model.dart';

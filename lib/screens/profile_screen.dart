@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fridgeflow/models/user_model.dart';
 import 'package:fridgeflow/services/user_service.dart';
 import 'package:fridgeflow/theme.dart';
+import 'package:fridgeflow/utils/responsive_layout.dart';
 import 'package:go_router/go_router.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -177,11 +178,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
+      body: ResponsiveLayout.centerConstrainedContent(
+        context,
+        maxWidth: 800,
+        child: Form(
+          key: _formKey,
+          child: ListView(
+            padding: ResponsiveLayout.getHorizontalPadding(context).copyWith(
+              top: ResponsiveLayout.getSpacing(context, mobile: 16),
+              bottom: ResponsiveLayout.getSpacing(context, mobile: 16),
+            ),
+            children: [
             _buildSection('Personal Information', [
               _buildTextField('Name', _nameController, Icons.person),
               _buildTextField('Email', _emailController, Icons.email, keyboardType: TextInputType.emailAddress),
@@ -205,7 +212,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 24),
             _buildStatsCard(),
             const SizedBox(height: 32),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fridgeflow/services/user_service.dart';
+import 'package:fridgeflow/utils/responsive_layout.dart';
 import 'package:fridgeflow/services/inventory_service.dart';
 import 'package:fridgeflow/services/recipe_service.dart';
 import 'package:fridgeflow/services/challenge_service.dart';
@@ -249,12 +250,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadData,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(),
-                padding: AppSpacing.paddingMd,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+              child: ResponsiveLayout.centerConstrainedContent(
+                context,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: ResponsiveLayout.getHorizontalPadding(context).copyWith(
+                    top: ResponsiveLayout.getSpacing(context, mobile: 16),
+                    bottom: ResponsiveLayout.getSpacing(context, mobile: 16),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                     Card(
                       child: Padding(
                         padding: AppSpacing.paddingLg,
@@ -615,31 +621,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(height: 24),
                     ],
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _QuickActionCard(
+                      ResponsiveLayout.builder(
+                        context,
+                        mobile: Row(
+                          children: [
+                            Expanded(
+                              child: _QuickActionCard(
                             icon: Icons.kitchen_outlined,
                             title: 'Pantry',
                             subtitle:
                                 '${_inventoryService.getItemsByUserId(user?.id ?? "").length} items',
                             color: Theme.of(context).colorScheme.primary,
-                            onTap: () => context.go('/pantry'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _QuickActionCard(
+                                onTap: () => context.go('/pantry'),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _QuickActionCard(
                             icon: Icons.restaurant_menu,
                             title: 'Recipes',
                             subtitle:
                                 '${_recipeService.recipes.length} available',
                             color: Theme.of(context).colorScheme.secondary,
-                            onTap: () => context.go('/recipes'),
-                          ),
+                                onTap: () => context.go('/recipes'),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                        tablet: Row(
+                          children: [
+                            Expanded(
+                              child: _QuickActionCard(
+                                icon: Icons.kitchen_outlined,
+                                title: 'Pantry',
+                                subtitle: '${_inventoryService.getItemsByUserId(user?.id ?? "").length} items',
+                                color: Theme.of(context).colorScheme.primary,
+                                onTap: () => context.go('/pantry'),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: _QuickActionCard(
+                                icon: Icons.restaurant_menu,
+                                title: 'Recipes',
+                                subtitle: '${_recipeService.recipes.length} available',
+                                color: Theme.of(context).colorScheme.secondary,
+                                onTap: () => context.go('/recipes'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     const SizedBox(height: 12),
                     Card(
                       color: Theme.of(context).colorScheme.primaryContainer,
@@ -794,7 +826,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ],
                     const SizedBox(height: 80),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

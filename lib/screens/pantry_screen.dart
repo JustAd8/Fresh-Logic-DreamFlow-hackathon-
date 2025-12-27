@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:fridgeflow/services/user_service.dart';
+import 'package:fridgeflow/utils/responsive_layout.dart';
 import 'package:fridgeflow/services/inventory_service.dart';
 import 'package:fridgeflow/services/food_scan_service.dart';
 import 'package:fridgeflow/services/compost_classifier_service.dart';
@@ -546,22 +547,28 @@ class _PantryScreenState extends State<PantryScreen> {
                 )
               : RefreshIndicator(
                   onRefresh: _loadItems,
-                  child: GridView.builder(
-                    padding: AppSpacing.paddingMd,
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.75,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
+                  child: ResponsiveLayout.centerConstrainedContent(
+                    context,
+                    child: GridView.builder(
+                      padding: ResponsiveLayout.getHorizontalPadding(context).copyWith(
+                        top: ResponsiveLayout.getSpacing(context, mobile: 16),
+                        bottom: ResponsiveLayout.getSpacing(context, mobile: 80),
+                      ),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: ResponsiveLayout.getGridColumns(context, mobile: 2, tablet: 3, desktop: 4),
+                        childAspectRatio: ResponsiveLayout.getGridAspectRatio(context) * 0.85,
+                        crossAxisSpacing: ResponsiveLayout.getSpacing(context, mobile: 12),
+                        mainAxisSpacing: ResponsiveLayout.getSpacing(context, mobile: 12),
+                      ),
+                      itemCount: _items.length,
+                      itemBuilder: (context, index) {
+                        final item = _items[index];
+                        return InventoryItemCard(
+                          item: item,
+                          onDelete: () => _deleteItem(item),
+                        );
+                      },
                     ),
-                    itemCount: _items.length,
-                    itemBuilder: (context, index) {
-                      final item = _items[index];
-                      return InventoryItemCard(
-                        item: item,
-                        onDelete: () => _deleteItem(item),
-                      );
-                    },
                   ),
                 ),
       floatingActionButton: FloatingActionButton.extended(

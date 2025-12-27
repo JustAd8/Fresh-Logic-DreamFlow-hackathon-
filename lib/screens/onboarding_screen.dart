@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:fridgeflow/services/user_service.dart';
 import 'package:fridgeflow/theme.dart';
+import 'package:fridgeflow/utils/responsive_layout.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -84,18 +85,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: AppSpacing.paddingLg,
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 32),
-                Center(
-                  child: Container(
-                    width: 140,
-                    height: 140,
+        child: ResponsiveLayout.centerConstrainedContent(
+          context,
+          maxWidth: 600,
+          child: SingleChildScrollView(
+            padding: ResponsiveLayout.getHorizontalPadding(context),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(height: ResponsiveLayout.getSpacing(context, mobile: 32)),
+                  Center(
+                    child: Container(
+                      width: context.responsiveValue(mobile: 120, tablet: 160, desktop: 180),
+                      height: context.responsiveValue(mobile: 120, tablet: 160, desktop: 180),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(24),
                       boxShadow: [
@@ -114,23 +118,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                Text(
-                  'Welcome to FridgeFlow',
-                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Your intelligent kitchen companion',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  SizedBox(height: ResponsiveLayout.getSpacing(context, mobile: 24)),
+                  Center(
+                    child: Text(
+                      'Welcome to FridgeFlow',
+                      style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: context.responsiveValue(mobile: 28, tablet: 32, desktop: 36),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Text(
+                      'Your intelligent kitchen companion',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                 const SizedBox(height: 40),
                 Text(
                   'Basic Information',
@@ -295,6 +304,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 const SizedBox(height: 24),
               ],
+              ),
             ),
           ),
         ),
