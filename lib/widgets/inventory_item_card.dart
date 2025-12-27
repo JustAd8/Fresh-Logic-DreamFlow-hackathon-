@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:fridgeflow/models/inventory_item_model.dart';
-import 'package:fridgeflow/theme.dart';
 
 /// Card displaying inventory item with expiry-based visual indicators
 class InventoryItemCard extends StatelessWidget {

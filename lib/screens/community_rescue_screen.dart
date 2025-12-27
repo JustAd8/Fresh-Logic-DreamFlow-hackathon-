@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:fridgeflow/services/user_service.dart';
 import 'package:fridgeflow/services/inventory_service.dart';
-import 'package:fridgeflow/utils/responsive_layout.dart';
 import 'package:fridgeflow/services/community_rescue_service.dart';
 import 'package:fridgeflow/models/community_listing_model.dart';
 import 'package:fridgeflow/models/inventory_item_model.dart';
 import 'package:fridgeflow/theme.dart';
-import 'package:intl/intl.dart';
 
 class CommunityRescueScreen extends StatefulWidget {
   const CommunityRescueScreen({super.key});

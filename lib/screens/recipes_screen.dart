@@ -5,8 +5,10 @@ import 'package:fridgeflow/utils/responsive_layout.dart';
 import 'package:fridgeflow/services/inventory_service.dart';
 import 'package:fridgeflow/services/recipe_service.dart';
 import 'package:fridgeflow/services/shopping_cart_service.dart';
+import 'package:fridgeflow/services/price_comparison_service.dart';
 import 'package:fridgeflow/widgets/recipe_card.dart';
 import 'package:fridgeflow/models/recipe_model.dart';
+import 'package:fridgeflow/models/price_comparison_model.dart';
 import 'package:fridgeflow/theme.dart';
 
 class RecipesScreen extends StatefulWidget {
@@ -21,6 +23,7 @@ class _RecipesScreenState extends State<RecipesScreen> {
   final _inventoryService = InventoryService();
   final _recipeService = RecipeService();
   final _cartService = ShoppingCartService();
+  final _priceService = PriceComparisonService();
 
   List<Recipe> _recipes = [];
   bool _isLoading = false;
@@ -213,6 +216,147 @@ class _RecipesScreenState extends State<RecipesScreen> {
                           )),
                       if (recipe.missingIngredients.isNotEmpty) ...[
                         const SizedBox(height: 16),
+                        FutureBuilder<RecipeCostComparison>(
+                          future: _priceService.getRecipeCostComparison(recipe),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return Card(
+                                child: Padding(
+                                  padding: AppSpacing.paddingMd,
+                                  child: Row(
+                                    children: [
+                                      const SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Text(
+                                        'Comparing prices...',
+                                        style: Theme.of(context).textTheme.bodyMedium,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }
+
+                            if (snapshot.hasData && snapshot.data!.bestPlatform != null) {
+                              final comparison = snapshot.data!;
+                              return Card(
+                                color: Theme.of(context).colorScheme.tertiaryContainer,
+                                child: Padding(
+                                  padding: AppSpacing.paddingMd,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.local_offer,
+                                            color: Theme.of(context).colorScheme.onTertiaryContainer,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Expanded(
+                                            child: Text(
+                                              'Missing Ingredients Cost',
+                                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: Theme.of(context).colorScheme.onTertiaryContainer,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 12),
+                                      ...QuickCommercePlatform.values.map((platform) {
+                                        final cost = comparison.totalCostByPlatform[platform] ?? 0.0;
+                                        final isBest = platform == comparison.bestPlatform;
+                                        
+                                        if (cost == 0) return const SizedBox.shrink();
+                                        
+                                        return Padding(
+                                          padding: const EdgeInsets.only(bottom: 6),
+                                          child: Row(
+                                            children: [
+                                              Text(platform.icon, style: const TextStyle(fontSize: 16)),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: Text(
+                                                  platform.displayName,
+                                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                                    fontWeight: isBest ? FontWeight.bold : FontWeight.normal,
+                                                    color: Theme.of(context).colorScheme.onTertiaryContainer,
+                                                  ),
+                                                ),
+                                              ),
+                                              Text(
+                                                '₹${cost.toStringAsFixed(0)}',
+                                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                                  fontWeight: isBest ? FontWeight.bold : FontWeight.normal,
+                                                  color: Theme.of(context).colorScheme.onTertiaryContainer,
+                                                ),
+                                              ),
+                                              if (isBest)
+                                                Padding(
+                                                  padding: const EdgeInsets.only(left: 6),
+                                                  child: Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                    decoration: BoxDecoration(
+                                                      color: Theme.of(context).colorScheme.primary,
+                                                      borderRadius: BorderRadius.circular(8),
+                                                    ),
+                                                    child: Text(
+                                                      'BEST',
+                                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                                        fontSize: 9,
+                                                        color: Theme.of(context).colorScheme.onPrimary,
+                                                        fontWeight: FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        );
+                                      }),
+                                      if (comparison.maxSavings != null && comparison.maxSavings! > 0) ...[
+                                        const SizedBox(height: 8),
+                                        Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.savings_outlined,
+                                                size: 16,
+                                                color: Theme.of(context).colorScheme.onTertiaryContainer,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                'Save up to ₹${comparison.maxSavings!.toStringAsFixed(0)}',
+                                                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Theme.of(context).colorScheme.onTertiaryContainer,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }
+
+                            return const SizedBox.shrink();
+                          },
+                        ),
+                        const SizedBox(height: 12),
                         SizedBox(
                           width: double.infinity,
                           child: OutlinedButton.icon(

@@ -16,33 +16,39 @@ class CartItem {
   final String name;
   final int quantity;
   final String unit;
+  final double? estimatedPrice;
 
   CartItem({
     required this.name,
     required this.quantity,
     this.unit = 'units',
+    this.estimatedPrice,
   });
 
   Map<String, dynamic> toJson() => {
     'name': name,
     'quantity': quantity,
     'unit': unit,
+    'estimatedPrice': estimatedPrice,
   };
 
   factory CartItem.fromJson(Map<String, dynamic> json) => CartItem(
     name: json['name'] as String,
     quantity: json['quantity'] as int,
     unit: json['unit'] as String? ?? 'units',
+    estimatedPrice: (json['estimatedPrice'] as num?)?.toDouble(),
   );
 
   CartItem copyWith({
     String? name,
     int? quantity,
     String? unit,
+    double? estimatedPrice,
   }) => CartItem(
     name: name ?? this.name,
     quantity: quantity ?? this.quantity,
     unit: unit ?? this.unit,
+    estimatedPrice: estimatedPrice ?? this.estimatedPrice,
   );
 }
 
