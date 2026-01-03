@@ -3,6 +3,8 @@ class User {
   final String name;
   final String email;
   final int? age;
+  final String? photoUrl;
+  final String themeMode;
   final String language;
   final String region;
   final String currency;
@@ -19,6 +21,8 @@ class User {
     required this.name,
     required this.email,
     this.age,
+    this.photoUrl,
+    this.themeMode = 'system',
     this.language = 'en',
     this.region = 'IN',
     this.currency = 'INR',
@@ -36,6 +40,8 @@ class User {
     'name': name,
     'email': email,
     'age': age,
+    'photoUrl': photoUrl,
+    'themeMode': themeMode,
     'language': language,
     'region': region,
     'currency': currency,
@@ -53,6 +59,8 @@ class User {
     name: json['name'] as String,
     email: json['email'] as String,
     age: json['age'] as int?,
+    photoUrl: json['photoUrl'] as String?,
+    themeMode: json['themeMode'] as String? ?? 'system',
     language: json['language'] as String? ?? 'en',
     region: json['region'] as String? ?? 'IN',
     currency: json['currency'] as String? ?? 'INR',
@@ -72,6 +80,8 @@ class User {
     String? name,
     String? email,
     int? age,
+    String? photoUrl,
+    String? themeMode,
     String? language,
     String? region,
     String? currency,
@@ -87,6 +97,8 @@ class User {
     name: name ?? this.name,
     email: email ?? this.email,
     age: age ?? this.age,
+    photoUrl: photoUrl ?? this.photoUrl,
+    themeMode: themeMode ?? this.themeMode,
     language: language ?? this.language,
     region: region ?? this.region,
     currency: currency ?? this.currency,

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:fridgeflow/models/user_model.dart';
 
 class UserService {
@@ -151,5 +152,47 @@ class UserService {
     }
     
     return recentMonths;
+  }
+
+  Future<String?> uploadProfilePhoto(Uint8List photoBytes, String fileName) async {
+    if (_currentUser == null) return null;
+    
+    try {
+      debugPrint('Uploading profile photo: $fileName');
+      final storage = FirebaseStorage.instance;
+      final ref = storage.ref().child('user_photos/${_currentUser!.id}/$fileName');
+      
+      final uploadTask = await ref.putData(
+        photoBytes,
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+      
+      final downloadUrl = await uploadTask.ref.getDownloadURL();
+      debugPrint('Photo uploaded successfully: $downloadUrl');
+      
+      return downloadUrl;
+    } catch (e) {
+      debugPrint('Failed to upload profile photo: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteProfilePhoto() async {
+    if (_currentUser == null || _currentUser!.photoUrl == null) return;
+    
+    try {
+      debugPrint('Deleting profile photo');
+      final storage = FirebaseStorage.instance;
+      final ref = storage.refFromURL(_currentUser!.photoUrl!);
+      await ref.delete();
+      
+      final updatedUser = _currentUser!.copyWith(photoUrl: '');
+      await updateUser(updatedUser);
+      
+      debugPrint('Photo deleted successfully');
+    } catch (e) {
+      debugPrint('Failed to delete profile photo: $e');
+      rethrow;
+    }
   }
 }

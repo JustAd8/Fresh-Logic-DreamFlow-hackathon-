@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
 import 'package:fridgeflow/firebase_options.dart';
 import 'package:fridgeflow/theme.dart';
 import 'package:fridgeflow/nav.dart';
@@ -7,6 +8,7 @@ import 'package:fridgeflow/services/user_service.dart';
 import 'package:fridgeflow/services/inventory_service.dart';
 import 'package:fridgeflow/services/recipe_service.dart';
 import 'package:fridgeflow/services/shopping_cart_service.dart';
+import 'package:fridgeflow/services/theme_service.dart';
 
 /// Main entry point for FridgeFlow - India Edition
 ///
@@ -26,6 +28,7 @@ Future<void> _initializeServices() async {
     );
 
     await UserService().initialize();
+    await ThemeService().initialize();
     
     final user = UserService().currentUser;
     if (user != null) {
@@ -48,13 +51,18 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'FridgeFlow',
-      debugShowCheckedModeBanner: false,
-      theme: lightTheme,
-      darkTheme: darkTheme,
-      themeMode: ThemeMode.system,
-      routerConfig: AppRouter.router,
+    return ChangeNotifierProvider.value(
+      value: ThemeService(),
+      child: Consumer<ThemeService>(
+        builder: (context, themeService, _) => MaterialApp.router(
+          title: 'FridgeFlow',
+          debugShowCheckedModeBanner: false,
+          theme: lightTheme,
+          darkTheme: darkTheme,
+          themeMode: themeService.themeMode,
+          routerConfig: AppRouter.router,
+        ),
+      ),
     );
   }
 }

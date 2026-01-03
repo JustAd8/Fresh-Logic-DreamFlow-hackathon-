@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:provider/provider.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:fridgeflow/services/user_service.dart';
+import 'package:fridgeflow/services/theme_service.dart';
 import 'package:fridgeflow/theme.dart';
 import 'package:fridgeflow/utils/responsive_layout.dart';
 import 'package:go_router/go_router.dart';
@@ -25,6 +29,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   List<String> _allergies = [];
   
   bool _isLoading = true;
+  bool _isUploadingPhoto = false;
   int _adminTapCount = 0;
 
   final List<String> _availableLanguages = ['en', 'hi', 'ta', 'te', 'bn', 'mr', 'gu', 'kn', 'ml', 'pa'];
@@ -149,31 +154,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
-          backgroundColor: AppTheme.primaryColor,
-          title: const Text('Profile & Settings', style: TextStyle(color: Colors.white)),
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          title: Text('Profile & Settings', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onPrimary),
             onPressed: () => context.pop(),
           ),
         ),
-        body: const Center(child: CircularProgressIndicator(color: AppTheme.primaryColor)),
+        body: Center(child: CircularProgressIndicator(color: Theme.of(context).colorScheme.primary)),
       );
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: AppTheme.primaryColor,
-        title: const Text('Profile & Settings', style: TextStyle(color: Colors.white)),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        title: Text('Profile & Settings', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onPrimary),
           onPressed: () => context.pop(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.save, color: Colors.white),
+            icon: Icon(Icons.save, color: Theme.of(context).colorScheme.onPrimary),
             onPressed: _saveProfile,
           ),
         ],
@@ -189,12 +194,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
               bottom: ResponsiveLayout.getSpacing(context, mobile: 16),
             ),
             children: [
+            _buildProfilePhotoSection(),
+            const SizedBox(height: 24),
             _buildSection('Personal Information', [
               _buildTextField('Name', _nameController, Icons.person),
               _buildTextField('Email', _emailController, Icons.email, keyboardType: TextInputType.emailAddress),
               _buildTextField('Age', _ageController, Icons.cake, keyboardType: TextInputType.number, required: false),
               _buildTextField('Current Location', _locationController, Icons.location_on, required: false),
             ]),
+            const SizedBox(height: 24),
+            _buildThemeSection(),
             const SizedBox(height: 24),
             _buildSection('Regional Settings', [
               _buildDropdown('Language', _selectedLanguage, _availableLanguages, _languageNames, (val) => setState(() => _selectedLanguage = val!)),
@@ -224,7 +233,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildSection(String title, List<Widget> children) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textColor)),
+      Text(title, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.onSurface)),
       const SizedBox(height: 12),
       ...children,
     ],
@@ -237,10 +246,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
       keyboardType: keyboardType,
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, color: AppTheme.primaryColor),
+        prefixIcon: Icon(icon, color: Theme.of(context).colorScheme.primary),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: Theme.of(context).colorScheme.surface,
       ),
       validator: required ? (val) => val?.trim().isEmpty ?? true ? '$label is required' : null : null,
     ),
@@ -254,7 +263,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         labelText: label,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: Theme.of(context).colorScheme.surface,
       ),
       items: options.map((opt) => DropdownMenuItem(value: opt, child: Text(names[opt] ?? opt))).toList(),
       onChanged: onChanged,
@@ -278,8 +287,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           }
           onChanged(newList);
         },
-        selectedColor: AppTheme.primaryColor.withValues(alpha: 0.3),
-        checkmarkColor: AppTheme.primaryColor,
+        selectedColor: Theme.of(context).colorScheme.primaryContainer,
+        checkmarkColor: Theme.of(context).colorScheme.primary,
       );
     }).toList(),
   );
@@ -330,6 +339,229 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return '${months[date.month - 1]} ${date.year}';
   }
 
+  Widget _buildProfilePhotoSection() {
+    final user = UserService().currentUser;
+    if (user == null) return const SizedBox.shrink();
+
+    return Center(
+      child: Stack(
+        children: [
+          CircleAvatar(
+            radius: 60,
+            backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+            backgroundImage: user.photoUrl != null && user.photoUrl!.isNotEmpty ? NetworkImage(user.photoUrl!) : null,
+            child: user.photoUrl == null || user.photoUrl!.isEmpty
+                ? Icon(Icons.person, size: 60, color: Theme.of(context).colorScheme.onPrimaryContainer)
+                : null,
+          ),
+          if (_isUploadingPhoto)
+            Positioned.fill(
+              child: CircleAvatar(
+                radius: 60,
+                backgroundColor: Colors.black.withValues(alpha: 0.5),
+                child: const CircularProgressIndicator(color: Colors.white),
+              ),
+            ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: Row(
+              children: [
+                if (user.photoUrl != null && user.photoUrl!.isNotEmpty)
+                  IconButton(
+                    onPressed: _deletePhoto,
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      padding: const EdgeInsets.all(8),
+                    ),
+                  ),
+                const SizedBox(width: 4),
+                IconButton(
+                  onPressed: _uploadPhoto,
+                  icon: Icon(Icons.camera_alt, color: Theme.of(context).colorScheme.primary),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    padding: const EdgeInsets.all(8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _uploadPhoto() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.image,
+        allowMultiple: false,
+      );
+
+      if (result == null || result.files.isEmpty) return;
+
+      setState(() => _isUploadingPhoto = true);
+
+      final file = result.files.first;
+      final bytes = file.bytes;
+
+      if (bytes == null) {
+        throw Exception('Failed to read file bytes');
+      }
+
+      final photoUrl = await UserService().uploadProfilePhoto(bytes, file.name);
+
+      if (photoUrl != null) {
+        final user = UserService().currentUser;
+        if (user != null) {
+          final updatedUser = user.copyWith(photoUrl: photoUrl);
+          await UserService().updateUser(updatedUser);
+
+          setState(() {});
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Profile photo updated successfully'),
+                backgroundColor: Theme.of(context).colorScheme.primary,
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Photo upload error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to upload photo'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() => _isUploadingPhoto = false);
+    }
+  }
+
+  Future<void> _deletePhoto() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Photo'),
+        content: const Text('Are you sure you want to delete your profile photo?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      setState(() => _isUploadingPhoto = true);
+      await UserService().deleteProfilePhoto();
+      setState(() {});
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Profile photo deleted'),
+            backgroundColor: Theme.of(context).colorScheme.primary,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Photo delete error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to delete photo'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      setState(() => _isUploadingPhoto = false);
+    }
+  }
+
+  Widget _buildThemeSection() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      const Text('Appearance', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      const SizedBox(height: 12),
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          children: [
+            _buildThemeOption('Light Mode', ThemeMode.light, Icons.light_mode),
+            const Divider(),
+            _buildThemeOption('Dark Mode', ThemeMode.dark, Icons.dark_mode),
+            const Divider(),
+            _buildThemeOption('System Default', ThemeMode.system, Icons.brightness_auto),
+          ],
+        ),
+      ),
+    ],
+  );
+
+  Widget _buildThemeOption(String label, ThemeMode mode, IconData icon) {
+    final themeService = Provider.of<ThemeService>(context, listen: false);
+    final isSelected = themeService.themeMode == mode;
+
+    return InkWell(
+      onTap: () async {
+        await themeService.setThemeMode(mode);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Theme changed to $label'),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        }
+      },
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        child: Row(
+          children: [
+            Icon(icon, color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                label,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  color: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface,
+                ),
+              ),
+            ),
+            if (isSelected)
+              Icon(Icons.check_circle, color: Theme.of(context).colorScheme.primary),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildAdminAccessButton() => GestureDetector(
     onTap: () {
       setState(() => _adminTapCount++);
@@ -341,18 +573,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     child: Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey.shade100,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.settings, size: 16, color: Colors.grey.shade600),
+          Icon(Icons.settings, size: 16, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
           const SizedBox(width: 8),
           Text(
             'FridgeFlow v1.0.0',
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+            style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
           ),
         ],
       ),
