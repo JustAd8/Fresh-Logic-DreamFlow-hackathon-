@@ -25,6 +25,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   List<String> _allergies = [];
   
   bool _isLoading = true;
+  int _adminTapCount = 0;
 
   final List<String> _availableLanguages = ['en', 'hi', 'ta', 'te', 'bn', 'mr', 'gu', 'kn', 'ml', 'pa'];
   final Map<String, String> _languageNames = {
@@ -210,6 +211,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ]),
             const SizedBox(height: 24),
             _buildStatsCard(),
+            const SizedBox(height: 24),
+            _buildAdminAccessButton(),
             const SizedBox(height: 32),
             ],
           ),
@@ -326,4 +329,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     return '${months[date.month - 1]} ${date.year}';
   }
+
+  Widget _buildAdminAccessButton() => GestureDetector(
+    onTap: () {
+      setState(() => _adminTapCount++);
+      if (_adminTapCount >= 7) {
+        _adminTapCount = 0;
+        context.push('/admin');
+      }
+    },
+    child: Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade100,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.settings, size: 16, color: Colors.grey.shade600),
+          const SizedBox(width: 8),
+          Text(
+            'FridgeFlow v1.0.0',
+            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+          ),
+        ],
+      ),
+    ),
+  );
 }
