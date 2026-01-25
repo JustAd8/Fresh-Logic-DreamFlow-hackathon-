@@ -550,9 +550,12 @@ class _RecipesScreenState extends State<RecipesScreen> {
                                 delegate: SliverChildBuilderDelegate(
                                   (context, index) {
                                     final recipe = _recipes[index];
-                                    return RecipeCard(
-                                      recipe: recipe,
-                                      onTap: () => _showRecipeDetails(recipe),
+                                    return StaggeredSlideInUp(
+                                      index: index,
+                                      child: RecipeCard(
+                                        recipe: recipe,
+                                        onTap: () => _showRecipeDetails(recipe),
+                                      ),
                                     );
                                   },
                                   childCount: _recipes.length,
@@ -565,6 +568,64 @@ class _RecipesScreenState extends State<RecipesScreen> {
                     ),
                   ),
                 ),
+    );
+  }
+}
+
+class StaggeredSlideInUp extends StatefulWidget {
+  final int index;
+  final Widget child;
+  final Duration duration;
+  final double offset;
+
+  const StaggeredSlideInUp({
+    super.key,
+    required this.index,
+    required this.child,
+    this.duration = const Duration(milliseconds: 400),
+    this.offset = 50.0,
+  });
+
+  @override
+  State<StaggeredSlideInUp> createState() => _StaggeredSlideInUpState();
+}
+
+class _StaggeredSlideInUpState extends State<StaggeredSlideInUp> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this, duration: widget.duration);
+    
+    _fadeAnimation = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
+    _slideAnimation = Tween<Offset>(
+      begin: Offset(0, widget.offset / 100), // Approximate relative offset
+      end: Offset.zero,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutQuad));
+
+    // Stagger delay based on index
+    Future.delayed(Duration(milliseconds: widget.index * 100), () {
+      if (mounted) _controller.forward();
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: widget.child,
+      ),
     );
   }
 }
